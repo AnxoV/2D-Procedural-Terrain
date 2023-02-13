@@ -299,7 +299,7 @@ function update() {
                 CHUNKS[`${player.getChunkAbsolutePosition()}`] = new Chunk();
             }
 
-            CHUNKS[`${player.getChunkRelativePosition()}`]
+            CHUNKS[`${player.getChunkAbsolutePosition()}`]
                 .tiles[`${player.getChunkRelativePosition()}`] = new Tile(
                     getColor(noiseValue)
                 );
