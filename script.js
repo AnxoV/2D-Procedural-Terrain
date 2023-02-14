@@ -1,11 +1,16 @@
-const TILES = {};
+const URL_PARAMS = new URLSearchParams(window.location.search);;
 
 const CHUNKS = {};
 
-let TILE_SIZE = 17;
+let TILE_SIZE = 10;
+let CHUNKS_RENDER = 4;
+let CHUNK_SIZE = 15;
 
 let DISPLAY;
-let DISPLAY_RESOLUTION = { w: 289, h: 289 };
+let DISPLAY_RESOLUTION = {
+    w: CHUNK_SIZE * TILE_SIZE * CHUNKS_RENDER + TILE_SIZE*(CHUNKS_RENDER%2+1),
+    h: CHUNK_SIZE * TILE_SIZE * CHUNKS_RENDER + TILE_SIZE*(CHUNKS_RENDER%2+1)
+};
 
 let NOISE;
 let NOISE_SCALE = 0.1;
@@ -17,10 +22,10 @@ let NOISE_RESOLUTION = {
 let player;
 
 const materials = {
-    "grass": "#d7b448",
-    "water": "#11aa00",
-    "sand": "#1197ff",
     "deep-water": "#074575",
+    "water": "#1197ff",
+    "sand": "#d7b448",
+    "grass": "#11aa00",
     "mountain": "#063800"
 };
 
@@ -43,15 +48,37 @@ CanvasDisplay2D.prototype.clear = function() {
 
 // ===== Chunk ===== //
 class Chunk {
-    constructor() {
+    constructor(position) {
+        this.position = position;;
         this.tiles = {};
+    }
+}
+Chunk.prototype.populate = function() {
+    let noise_value;
+    for (let y = 0; y < NOISE_RESOLUTION.h; y++) {
+        for (let x = 0; x < NOISE_RESOLUTION.w; x++) {
+            noise_value = round(
+                transformValue(
+                    getTile(
+                        this.position.multiply(TILE_SIZE).add(Vector.from(x, y)).multiply(NOISE_SCALE)
+                    ),
+                    { min: -1, max: 1 },
+                    { min: 0, max: 1 }
+                ),
+                1
+            );
+            this.tiles[`${x} ${y}`] = new Tile({
+                color: getColor(noise_value),
+                value: noise_value
+            });
+        }
     }
 }
 
 // ===== Tile ===== //
 class Tile {
-    constructor(material) {
-        this.material = material;
+    constructor(data) {
+        Object.assign(this, data);
     }
 }
 
@@ -67,19 +94,15 @@ Entity.prototype.moveTo = function(newPosition) {
 Entity.prototype.moveBy = function(force) {
     this.moveTo(this.position.add(force));
 };
-Entity.prototype.getChunkAbsolutePosition = function() {
-    return Vector.clone(this.position)
-                 .map((value) => Math.floor(value / TILE_SIZE));
-};
-Entity.prototype.getChunkRelativePosition = function() {
-    return Vector.clone(this.position)
-                 .map((value) => ((value < 0) ? TILE_SIZE : 0) + value % TILE_SIZE);
-}
 
 class Player extends Entity {
-    constructor(position, velocity) {
-        super(position);
-        this.velocity = velocity;
+    constructor() {
+        super();
+        this.moveTo(Vector.from(
+            Math.floor(TILE_SIZE/2),
+            Math.floor(TILE_SIZE/2)
+        ));
+        this.velocity = 1;
     }
 }
 Player.size = { w: 1, h: 1 };
@@ -259,61 +282,60 @@ function $(query) {
 function getColor(value) {
     if (value < 0.3) return materials["deep-water"];
     else if (value < 0.4) return materials["water"];
-    else if (value < 0.5) return materials[""];
-    else if (value < 0.8) return "#11aa00";
-    else if (value < 1) return "#063800";
+    else if (value < 0.5) return materials["sand"];
+    else if (value < 0.8) return materials["grass"];
+    else if (value < 1) return materials["mountain"];
 }
 
 function getTile(position) {
     return NOISE.perlin2D(position.x, position.y);
 }
 
-// ===== ===== //
-
-function init() {
-    DISPLAY = new CanvasDisplay2D($("#canvas"), DISPLAY_RESOLUTION);
-    NOISE = new Noise();
-    player = new Player(Vector.from(0, 0), 1);
-    $("#player-position").innerText = player.position;
-    $("#player-chunk").innerText = player.getChunkAbsolutePosition();
-    $("#player-chunk-position").innerText = player.getChunkRelativePosition();
+function getChunkPosition(position) {
+    return Vector.clone(position)
+                 .map((value) => Math.floor(value / TILE_SIZE));
 }
 
-function update() {
-    DISPLAY.clear();
-    let tileMapPosition = Vector.clone(player.position);
+function getChunkRelativePosition(position) {
+    return Vector.clone(position)
+                 .map((value) => (value < 0) ? (value%TILE_SIZE+TILE_SIZE)%TILE_SIZE : value%TILE_SIZE);
+}
 
-    for (let y = 0; y < NOISE_RESOLUTION.h; y++) {
-        for (let x = 0; x < NOISE_RESOLUTION.w; x++) {
-            let tileRelativePosition = tileMapPosition.add(Vector.from(x, y));
-            
-            let noiseValue = getTile(tileRelativePosition.multiply(NOISE_SCALE));
-            TILES[`${tileRelativePosition}`] = noiseValue;
-
-            let chunkRelativePosition = new Vector(
-                Math.floor(tileRelativePosition.x / (TILE_SIZE * 17)),
-                Math.floor(tileRelativePosition.y / (TILE_SIZE * 17))
-            );
-
-            if (!CHUNKS[`${player.getChunkAbsolutePosition()}`]) {
-                CHUNKS[`${player.getChunkAbsolutePosition()}`] = new Chunk();
-            }
-
-            CHUNKS[`${player.getChunkAbsolutePosition()}`]
-                .tiles[`${player.getChunkRelativePosition()}`] = new Tile(
-                    getColor(noiseValue)
-                );
-
-            DISPLAY.ctx.fillStyle = getColor((TILES[`${tileRelativePosition}`] + 1) / 2);
-            DISPLAY.ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-        }
+function loadChunk(position) {
+    let chunk = new Chunk(position);
+    if (CHUNKS[`${position}`]) {
+        return CHUNKS[`${position}`];
     }
-    
-    player.draw(DISPLAY.ctx);
+    chunk.populate();
+    return chunk;
 }
 
-// ===== ===== //
+function hash(string) {
+    let hash = 0;
+    if (string.length == 0) {
+        return hash;
+    }
+    for (let i = 0; i < string.length; i++) {
+        ch = string.charCodeAt(i);
+        hash = ((hash << 5) - hash) + ch;
+        hash &= hash;
+    }
+    return hash;
+}
 
+function writeIntoElements(elements) {
+    for (const selector in elements) {
+        $(selector).innerText = elements[selector];
+    }
+}
+
+function round(float, decimals) {
+    return parseFloat(float.toFixed(decimals));
+}
+
+function transformValue(value, oldRange, newRange) {
+    return (((value - oldRange.min) * (newRange.max - newRange.min)) / (oldRange.max - oldRange.min)) + newRange.min;
+}
 
 function animation(animate) {
     let then, deltaTime;
@@ -335,9 +357,6 @@ function animation(animate) {
 
 function keyPress(event) {
     switch(event.key) {
-        case " ":
-            NOISE.setSeed(Date.now());
-            break;
         case "w":
             player.moveBy(Vector.from(0, -player.velocity));
             break;
@@ -353,11 +372,51 @@ function keyPress(event) {
         default:
             break;
     }
-    $("#player-position").innerText = player.position;
-    $("#player-chunk").innerText = player.getChunkAbsolutePosition();
-    $("#player-chunk-position").innerText = player.getChunkRelativePosition();
+    writeIntoElements({
+        "#player-position": player.position,
+        "#player-chunk": getChunkPosition(player.position),
+        "#player-chunk-position": getChunkRelativePosition(player.position)
+    });
 }
 
+// ===== ===== //
+
+function init() {
+    DISPLAY = new CanvasDisplay2D($("#canvas"), DISPLAY_RESOLUTION);
+    NOISE = new Noise();
+    NOISE.setSeed(hash(URL_PARAMS.get("seed") || "1337"));
+    player = new Player();
+    writeIntoElements({
+        "#player-position": player.position,
+        "#player-chunk": getChunkPosition(player.position),
+        "#player-chunk-position": getChunkRelativePosition(player.position)
+    });
+    addEventListener("keydown", keyPress);
+}
+
+function update() {
+    DISPLAY.clear();
+
+    for (let y = 0; y < NOISE_RESOLUTION.h; y++) {
+        for (let x = 0; x < NOISE_RESOLUTION.w; x++) {
+            let absolutePosition = player.position.substract(Vector.from(
+                Math.floor(TILE_SIZE/2),
+                Math.floor(TILE_SIZE/2)
+            )).add(Vector.from(x, y));
+            let chunkPosition = getChunkPosition(absolutePosition);
+            let chunkRelativePosition = getChunkRelativePosition(absolutePosition);
+
+            CHUNKS[`${chunkPosition}`] = loadChunk(chunkPosition);
+
+            DISPLAY.ctx.fillStyle = CHUNKS[`${chunkPosition}`].tiles[`${chunkRelativePosition}`].color;
+            DISPLAY.ctx.fillRect(x*TILE_SIZE, y*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        }
+    }
+
+    player.draw(DISPLAY.ctx);
+}
+
+// ===== ===== //
+
 init();
-addEventListener("keydown", keyPress);
 animation(update);
