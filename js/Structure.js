@@ -18,26 +18,43 @@ Chunk.loadChunk = function(position) {
 };
 
 Chunk.getPosition = function getChunkPosition(position) {
-    return Vector.clone(position)
-                 .map((value) => Math.floor(value / App.TILE_SIZE));
+    position = Vector.clone(position);
+    position.map((value) => {
+        return Math.floor(value / App.DISPLAY.TILE_SIZE);
+    });
+    return position;
 };
 
 Chunk.getRelativePosition = function getChunkRelativePosition(position) {
-    return Vector.clone(position)
-                 .map((value) => (value < 0) ? (value % App.TILE_SIZE + App.TILE_SIZE) % App.TILE_SIZE : value % App.TILE_SIZE);
+    position = Vector.clone(position);
+    position.map((value) => {
+        if (value < 0) {
+            return (value % App.DISPLAY.TILE_SIZE + App.DISPLAY.TILE_SIZE) % App.DISPLAY.TILE_SIZE;
+        }
+        return value % App.DISPLAY.TILE_SIZE;
+    });
+    return position;
 };
 
 Chunk.prototype.populate = function() {
     let noise_value;
-    for (let y = 0; y < App.NOISE_RESOLUTION.h; y++) {
-        for (let x = 0; x < App.NOISE_RESOLUTION.w; x++) {
+    for (let y = 0; y < App.NOISE.RESOLUTION.h; y++) {
+        for (let x = 0; x < App.NOISE.RESOLUTION.w; x++) {
             noise_value = Utils.round(
                 Utils.transformValue(
                     Utils.getTile(
-                        this.position.multiply(App.TILE_SIZE).add(Vector.from(x, y)).multiply(App.NOISE_SCALE)
+                        this.position.multiply(App.DISPLAY.TILE_SIZE)
+                                     .add(Vector.from(x, y))
+                                     .multiply(App.NOISE.SCALE)
                     ),
-                    { min: -1, max: 1 },
-                    { min: 0, max: 1 }
+                    {
+                        min: -1,
+                        max: 1
+                    },
+                    {
+                        min: 0,
+                        max: 1
+                    }
                 ),
                 1
             );

@@ -2,17 +2,20 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
     <title>Playground</title>
 </head>
 <body>
-    Posición: <small id="player-position"></small>
-    <br>
-    Chunk: <small id="player-chunk"></small>
-    <br>
-    Posición relativa al chunk: <small id="player-chunk-position"></small>
+    
     <h2 id="title">Utiliza WASD para moverte</h2>
     <canvas id="canvas"></canvas>
+    <div id="info">
+        Posición:<small id="player-position"></small>
+        | Chunk:<small id="player-chunk"></small>
+        | Posición chunk:<small id="player-chunk-position"></small>
+    </div>
+    
     <script type="module" src="js/main.js"></script>
 </body>
 </html>

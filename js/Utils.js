@@ -11,18 +11,18 @@ export function getColor(value) {
 }
 
 export function getTile(position) {
-    return App.NOISE.perlin2D(position.x, position.y);
+    return App.NOISE.THIS.perlin2D(position.x, position.y);
 }
 
 
 export function hash(string) {
-    let ch, hash = 0;
+    let character, hash = 0;
     if (string.length == 0) {
         return hash;
     }
     for (let i = 0; i < string.length; i++) {
-        ch = string.charCodeAt(i);
-        hash = ((hash << 5) - hash) + ch;
+        character = string.charCodeAt(i);
+        hash = ((hash << 5) - hash) + character;
         hash &= hash;
     }
     return hash;

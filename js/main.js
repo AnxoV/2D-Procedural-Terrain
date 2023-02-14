@@ -6,23 +6,33 @@ import {Noise} from "./Noise.js";
 import * as Utils from "./Utils.js";
 
 (function(App) {
-    App.URL_PARAMS = new URLSearchParams(window.location.search);
-    App.CHUNKS = {};
+    const URL_PARAMS = new URLSearchParams(window.location.search);
 
-    App.TILE_SIZE = 10;
-    App.CHUNKS_RENDER = 4;
-    App.CHUNK_SIZE = 15;
-
-    App.DISPLAY;
-    App.DISPLAY_RESOLUTION = {
-        w: App.CHUNK_SIZE * App.TILE_SIZE * App.CHUNKS_RENDER + App.TILE_SIZE*(App.CHUNKS_RENDER%2+1),
-        h: App.CHUNK_SIZE * App.TILE_SIZE * App.CHUNKS_RENDER + App.TILE_SIZE*(App.CHUNKS_RENDER%2+1)
+    App.DISPLAY = {
+        TILE_SIZE: 15,
+        CHUNK_SIZE: 15,
+        CHUNKS_RENDER: 1
     };
 
-    App.NOISE_SCALE = 0.1;
-    App.NOISE_RESOLUTION = {
-        w: App.DISPLAY_RESOLUTION.w / App.TILE_SIZE,
-        h: App.DISPLAY_RESOLUTION.h / App.TILE_SIZE
+    App.DISPLAY.RESOLUTION =  {
+        w: App.DISPLAY.TILE_SIZE
+            * App.DISPLAY.CHUNK_SIZE
+            * App.DISPLAY.CHUNKS_RENDER
+            + App.DISPLAY.TILE_SIZE
+                * (App.DISPLAY.CHUNKS_RENDER%2 + 1),
+        h: App.DISPLAY.TILE_SIZE
+            * App.DISPLAY.CHUNK_SIZE
+            * App.DISPLAY.CHUNKS_RENDER
+            + App.DISPLAY.TILE_SIZE
+                * (App.DISPLAY.CHUNKS_RENDER%2 + 1)
+    };
+
+    App.NOISE = {
+        SCALE: 0.1,
+        RESOLUTION: {
+            w: App.DISPLAY.RESOLUTION.w / App.DISPLAY.TILE_SIZE,
+            h: App.DISPLAY.RESOLUTION.h / App.DISPLAY.TILE_SIZE
+        }
     };
 
     App.MATERIALS = {
@@ -32,6 +42,8 @@ import * as Utils from "./Utils.js";
         "grass": "#11aa00",
         "mountain": "#063800"
     };
+
+    App.CHUNKS = {};
 
     function keyPress(event) {
         switch(event.key) {
@@ -56,13 +68,20 @@ import * as Utils from "./Utils.js";
             "#player-chunk-position": Chunk.getRelativePosition(App.PLAYER.position)
         });
     }
+
+    function getAbsolutePosition(position) {
+        return App.PLAYER.position.substract(Vector.from(
+            Math.floor(App.DISPLAY.TILE_SIZE/2),
+            Math.floor(App.DISPLAY.TILE_SIZE/2)
+        )).add(position);
+    }
     
-    // ===== ===== //
+    // =====-===== //
     
     function init() {
-        App.DISPLAY = new CanvasDisplay2D(Utils.$("#canvas"), App.DISPLAY_RESOLUTION);
-        App.NOISE = new Noise();
-        App.NOISE.setSeed(Utils.hash(App.URL_PARAMS.get("seed") || "1337"));
+        App.DISPLAY.THIS = new CanvasDisplay2D(Utils.$("#canvas"), App.DISPLAY.RESOLUTION);
+        App.NOISE.THIS = new Noise();
+        App.NOISE.THIS.setSeed(Utils.hash(URL_PARAMS.get("seed") || "1337"));
         App.PLAYER = new Player();
         Utils.writeIntoElements({
             "#player-position": App.PLAYER.position,
@@ -71,30 +90,33 @@ import * as Utils from "./Utils.js";
         });
         addEventListener("keydown", keyPress);
     }
+
     
     function update() {
-        App.DISPLAY.clear();
+        App.DISPLAY.THIS.clear();
     
-        for (let y = 0; y < App.NOISE_RESOLUTION.h; y++) {
-            for (let x = 0; x < App.NOISE_RESOLUTION.w; x++) {
-                let absolutePosition = App.PLAYER.position.substract(Vector.from(
-                    Math.floor(App.TILE_SIZE/2),
-                    Math.floor(App.TILE_SIZE/2)
-                )).add(Vector.from(x, y));
+        for (let y = 0; y < App.NOISE.RESOLUTION.h; y++) {
+            for (let x = 0; x < App.NOISE.RESOLUTION.w; x++) {
+                let absolutePosition = getAbsolutePosition(Vector.from(x, y));
                 let chunkPosition = Chunk.getPosition(absolutePosition);
                 let chunkRelativePosition = Chunk.getRelativePosition(absolutePosition);
     
                 App.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
     
-                App.DISPLAY.ctx.fillStyle = App.CHUNKS[`${chunkPosition}`].tiles[`${chunkRelativePosition}`].color;
-                App.DISPLAY.ctx.fillRect(x*App.TILE_SIZE, y*App.TILE_SIZE, App.TILE_SIZE, App.TILE_SIZE);
+                App.DISPLAY.THIS.ctx.fillStyle = App.CHUNKS[`${chunkPosition}`].tiles[`${chunkRelativePosition}`].color;
+                App.DISPLAY.THIS.ctx.fillRect(
+                    x * App.DISPLAY.TILE_SIZE,
+                    y * App.DISPLAY.TILE_SIZE,
+                    App.DISPLAY.TILE_SIZE,
+                    App.DISPLAY.TILE_SIZE
+                );
             }
         }
     
-        App.PLAYER.draw(App.DISPLAY.ctx);
+        App.PLAYER.draw(App.DISPLAY.THIS.ctx);
     }
     
-    // ===== ===== //
+    // =====-===== //
     
     init();
     CanvasDisplay2D.animation(update);

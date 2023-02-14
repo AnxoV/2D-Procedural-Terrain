@@ -19,6 +19,13 @@ body > * {
 
 #title { font-weight: 400; }
 
+#info {
+    display: flex;
+    align-items: baseline;
+    font-size: .75em;
+}
+#info > * { margin: 0 1em; }
+
 canvas {
     border: 5px solid palevioletred;
 }
