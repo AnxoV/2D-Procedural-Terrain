@@ -163,33 +163,6 @@ import * as Utils from "./Utils.js";
         App.DISPLAY.THIS.clear();
         drawTerrain();
         drawEntities();
-        /*for (let y = 0; y < App.NOISE.RESOLUTION.h; y++) {
-            for (let x = 0; x < App.NOISE.RESOLUTION.w; x++) {
-                let absolutePosition = getAbsolutePosition(Vector.from(x, y));
-                let chunkPosition = Chunk.getPosition(absolutePosition);
-                let chunkRelativePosition = Chunk.getRelativePosition(absolutePosition);
-    
-                if (!App.CHUNKS[`${chunkPosition}`]) {
-                    App.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
-                }
-
-                App.DISPLAY.THIS.ctx.fillStyle = App.CHUNKS[`${chunkPosition}`].tiles[`${chunkRelativePosition}`].color;
-                App.DISPLAY.THIS.ctx.fillRect(
-                    x * App.DISPLAY.TILE_SIZE,
-                    y * App.DISPLAY.TILE_SIZE,
-                    App.DISPLAY.TILE_SIZE,
-                    App.DISPLAY.TILE_SIZE
-                );
-
-                if (App.ENTITIES[`${absolutePosition}`]) {
-                    let entity = App.ENTITIES[`${absolutePosition}`];
-                    entity.position = App.PLAYER.position.substract(entity.position);
-                    App.DISPLAY.THIS.ctx.fillStyle = entity.material;
-                    entity.draw(App.DISPLAY.THIS.ctx);
-                }
-            }
-        }*/
-    
         drawPlayer();
     }
     
