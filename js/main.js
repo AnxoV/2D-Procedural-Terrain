@@ -1,7 +1,8 @@
 import {Vector} from "./Vector.js";
 import {CanvasDisplay2D} from "./CanvasDisplay2D.js";
 import {Chunk} from "./Structure.js";
-import {Entity, Player} from "./Entities.js";
+import {Player} from "./Entity.js";
+import {Block} from "./Block.js";
 import {Noise} from "./Noise.js";
 import * as Utils from "./Utils.js";
 
@@ -17,14 +18,10 @@ import * as Utils from "./Utils.js";
     App.DISPLAY.RESOLUTION =  {
         w: App.DISPLAY.TILE_SIZE
             * App.DISPLAY.CHUNK_SIZE
-            * App.DISPLAY.CHUNKS_RENDER
-            + App.DISPLAY.TILE_SIZE
-                * (App.DISPLAY.CHUNKS_RENDER%2 + 1),
+            * App.DISPLAY.CHUNKS_RENDER,
         h: App.DISPLAY.TILE_SIZE
             * App.DISPLAY.CHUNK_SIZE
             * App.DISPLAY.CHUNKS_RENDER
-            + App.DISPLAY.TILE_SIZE
-                * (App.DISPLAY.CHUNKS_RENDER%2 + 1)
     };
 
     App.NOISE = {
@@ -44,7 +41,6 @@ import * as Utils from "./Utils.js";
     };
 
     App.CHUNKS = {};
-    App.ENTITIES = {};
 
     function keyPress(event) {
         switch(event.key) {
@@ -70,19 +66,11 @@ import * as Utils from "./Utils.js";
         });
     }
 
-    function getAbsolutePosition(position) {
-        return App.PLAYER.position.substract(Vector.from(
-            Math.floor(App.DISPLAY.TILE_SIZE/2),
-            Math.floor(App.DISPLAY.TILE_SIZE/2)
-        )).add(position);
-    }
-
     function drawTile(position) {
-        let absolutePosition = getAbsolutePosition(position);
-        let chunkPosition = Chunk.getPosition(absolutePosition);
-        let chunkRelativePosition = Chunk.getRelativePosition(absolutePosition);
+        let positions = Chunk.getPositions(position);
 
-        App.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
+        let chunk = App.CHUNKS[`${positions.chunk}`] = Chunk.loadChunk(positions.chunk);
+        let tile = chunk.tiles[`${positions.chunkRelative}`];
 
         App.DISPLAY.THIS.fillRect(
             position.multiply(App.DISPLAY.TILE_SIZE),
@@ -90,8 +78,19 @@ import * as Utils from "./Utils.js";
                 w: App.DISPLAY.TILE_SIZE,
                 h: App.DISPLAY.TILE_SIZE
             },
-            App.CHUNKS[`${chunkPosition}`].tiles[`${chunkRelativePosition}`].color
+            tile.color
         );
+
+        if (tile.block) {
+            App.DISPLAY.THIS.fillRect(
+                position.multiply(App.DISPLAY.TILE_SIZE),
+                {
+                    w: App.DISPLAY.TILE_SIZE,
+                    h: App.DISPLAY.TILE_SIZE
+                },
+                tile.block.material
+            );
+        }
     }
 
     function drawTerrain() {
@@ -102,28 +101,6 @@ import * as Utils from "./Utils.js";
         }
     }
 
-    function drawEntity(position) {
-        let absolutePosition = getAbsolutePosition(position);
-        if (App.ENTITIES[`${absolutePosition}`]) {
-            let entity = App.ENTITIES[`${absolutePosition}`];
-            App.DISPLAY.THIS.fillRect(
-                position.multiply(App.DISPLAY.TILE_SIZE),
-                {
-                    w: entity.size.w * App.DISPLAY.TILE_SIZE,
-                    h: entity.size.h * App.DISPLAY.TILE_SIZE
-                },
-                entity.material
-            );
-        }
-    }
-
-    function drawEntities() {
-        for (let y = 0; y < App.NOISE.RESOLUTION.h; y++) {
-            for (let x = 0; x < App.NOISE.RESOLUTION.w; x++) {
-                drawEntity(Vector.from(x, y));
-            }
-        }
-    }
 
     function drawPlayer() {
         App.DISPLAY.THIS.fillRect(
@@ -147,9 +124,12 @@ import * as Utils from "./Utils.js";
         App.NOISE.THIS.setSeed(Utils.hash(URL_PARAMS.get("seed") || "1337"));
         App.PLAYER = new Player("red");
         Chunk.loadChunks(Chunk.getPosition(App.PLAYER.position));
-        App.ENTITIES["3 3"] = new Entity(Vector.from(3, 3), "purple", {w: 1, h: 1});
-        App.ENTITIES["6 4"] = new Entity(Vector.from(3, 3), "orange", {w: 1, h: 1});
-        App.ENTITIES["14 8"] = new Entity(Vector.from(3, 3), "pink", {w: 1, h: 1});
+        Chunk.loadChunk(Vector.from(0, -1));
+        App.CHUNKS["0 -1"].tiles["0 7"].block = new Block({
+            position: Vector.from(0, -1),
+            material: "purple",
+            walkable: false
+        });
         Utils.writeIntoElements({
             "#player-position": App.PLAYER.position,
             "#player-chunk": Chunk.getPosition(App.PLAYER.position),
@@ -162,7 +142,6 @@ import * as Utils from "./Utils.js";
     function update() {
         App.DISPLAY.THIS.clear();
         drawTerrain();
-        drawEntities();
         drawPlayer();
     }
     

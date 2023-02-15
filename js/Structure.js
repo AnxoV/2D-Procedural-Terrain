@@ -1,6 +1,16 @@
 import {Vector} from "./Vector.js";
 import * as Utils from "./Utils.js";
 
+class World {
+    constructor() {}
+}
+World.getAbsolutePosition = function(position) {
+    return App.PLAYER.position.substract(Vector.from(
+        Math.floor(App.DISPLAY.TILE_SIZE/2),
+        Math.floor(App.DISPLAY.TILE_SIZE/2)
+    )).add(position);
+}
+
 export class Chunk {
     constructor(position) {
         this.position = position;;
@@ -10,10 +20,11 @@ export class Chunk {
 
 Chunk.loadChunk = function(position) {
     let chunk = new Chunk(position);
-    if (App.CHUNKS[`${position}`]) {
-        return App.CHUNKS[`${position}`];
+    if (App.CHUNKS[position.toString()]) {
+        return App.CHUNKS[position.toString()];
     }
     chunk.populate();
+    App.CHUNKS[position.toString()] = chunk;
     return chunk;
 };
 
@@ -44,6 +55,14 @@ Chunk.getRelativePosition = function getChunkRelativePosition(position) {
         return value % App.DISPLAY.TILE_SIZE;
     });
     return position;
+};
+
+Chunk.getPositions = function(position) {
+    let positions = {};
+    positions.absolute = World.getAbsolutePosition(position);
+    positions.chunk = Chunk.getPosition(positions.absolute);
+    positions.chunkRelative = Chunk.getRelativePosition(positions.absolute);
+    return positions;
 };
 
 Chunk.prototype.populate = function() {
