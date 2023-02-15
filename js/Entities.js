@@ -1,8 +1,10 @@
 import {Vector} from "./Vector.js";
 
 export class Entity {
-    constructor(position) {
+    constructor(position, material, size) {
         this.position = position;
+        this.material = material;
+        this.size = size;
     }
 }
 
@@ -14,25 +16,33 @@ Entity.prototype.moveBy = function(force) {
     this.moveTo(this.position.add(force));
 };
 
-export class Player extends Entity {
-    constructor() {
-        super();
-        this.moveTo(Vector.from(
-            Math.floor(App.DISPLAY.TILE_SIZE/2),
-            Math.floor(App.DISPLAY.TILE_SIZE/2)
-        ));
-        this.velocity = 1;
-    }
+Entity.prototype.draw = function(ctx) {
+    ctx.fillStyle = this.material;
+    // Posición relativa a la pantall no debería estar aquí
+    ctx.fillRect(
+        this.position.x * App.DISPLAY.TILE_SIZE,
+        this.position.y * App.DISPLAY.TILE_SIZE,
+        this.size.w * App.DISPLAY.TILE_SIZE,
+        this.size.h * App.DISPLAY.TILE_SIZE
+    );
 }
 
-Player.size = { w: 1, h: 1 };
+export class Block extends Entity {
+    constructor(position, material) {
+        super(position, material);
+    }
+};
 
-Player.prototype.draw = function(ctx) {
-    ctx.fillStyle = "red";
-    ctx.fillRect(
-        App.DISPLAY.RESOLUTION.w/2 - App.DISPLAY.TILE_SIZE/2,
-        App.DISPLAY.RESOLUTION.h/2 - App.DISPLAY.TILE_SIZE/2,
-        Player.size.w * App.DISPLAY.TILE_SIZE,
-        Player.size.h * App.DISPLAY.TILE_SIZE
-    );
+export class Player extends Entity {
+    constructor(material) {
+        super(
+            Vector.from(
+                Math.floor(App.DISPLAY.TILE_SIZE/2),
+                Math.floor(App.DISPLAY.TILE_SIZE/2)
+            ),
+            material,
+            { w: 1, h: 1 }
+        );
+        this.velocity = 1;
+    }
 };

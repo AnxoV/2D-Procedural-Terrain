@@ -17,6 +17,16 @@ Chunk.loadChunk = function(position) {
     return chunk;
 };
 
+Chunk.loadChunks = function(position) {
+    let chunkPosition;
+    for (let y = -App.DISPLAY.CHUNKS_RENDER; y <= App.DISPLAY.CHUNKS_RENDER; y++) {
+        for (let x = -App.DISPLAY.CHUNKS_RENDER; x <= App.DISPLAY.CHUNKS_RENDER; x++) {
+            chunkPosition = Chunk.getPosition(position).add(Vector.from(x, y));
+            App.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
+        }
+    }
+}
+
 Chunk.getPosition = function getChunkPosition(position) {
     position = Vector.clone(position);
     position.map((value) => {

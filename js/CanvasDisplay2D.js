@@ -16,6 +16,16 @@ CanvasDisplay2D.prototype.clear = function() {
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 };
 
+CanvasDisplay2D.prototype.fillRect = function(position, size, color) {
+    this.ctx.fillStyle = color;
+    this.ctx.fillRect(
+        position.x,
+        position.y,
+        size.w,
+        size.h
+    );
+}
+
 CanvasDisplay2D.animation = function(animate) {
     let then, deltaTime;
 

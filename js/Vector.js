@@ -46,9 +46,17 @@ Vector.prototype.multiply = function(scalar) {
         this.x * scalar,
         this.y * scalar,
         this.z * scalar
-    )
+    );
 };
 
 Vector.prototype.dotProduct = function(x = 0, y = 0, z = 0) {
     return this.x*x + this.y*y + this.z*z;
 };
+
+Vector.prototype.divide = function(scalar) {
+    return new Vector(
+        this.x / scalar,
+        this.y / scalar,
+        this.z / scalar
+    );
+}
