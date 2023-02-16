@@ -8,11 +8,11 @@ export class Chunk {
 }
 
 Chunk.setChunk = function(position, chunk) {
-    App.CHUNKS[position.toString()] = chunk;
+    APP.CHUNKS[position.toString()] = chunk;
 };
 
 Chunk.getChunk = function(position) {
-    return App.CHUNKS[position.toString()] || false;
+    return APP.CHUNKS[position.toString()] || false;
 };
 
 Chunk.loadChunk = function(position) {
@@ -28,10 +28,10 @@ Chunk.loadChunk = function(position) {
 
 Chunk.loadChunks = function(position) {
     let chunkPosition;
-    for (let y = -App.DISPLAY.CHUNKS_RENDER; y <= App.DISPLAY.CHUNKS_RENDER; y++) {
-        for (let x = -App.DISPLAY.CHUNKS_RENDER; x <= App.DISPLAY.CHUNKS_RENDER; x++) {
+    for (let y = -APP.MAIN_DISPLAY.CHUNKS_RENDER; y <= APP.MAIN_DISPLAY.CHUNKS_RENDER; y++) {
+        for (let x = -APP.MAIN_DISPLAY.CHUNKS_RENDER; x <= APP.MAIN_DISPLAY.CHUNKS_RENDER; x++) {
             chunkPosition = Chunk.getPosition(position).add(Vector.from(x, y));
-            App.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
+            APP.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
         }
     }
 };
@@ -39,7 +39,7 @@ Chunk.loadChunks = function(position) {
 Chunk.getPosition = function getChunkPosition(position) {
     position = Vector.clone(position);
     position.map((value) => {
-        return Math.floor(value / App.DISPLAY.CHUNK_SIZE);
+        return Math.floor(value / APP.MAIN_DISPLAY.CHUNK_SIZE);
     });
     return position;
 };
@@ -48,9 +48,9 @@ Chunk.getRelativePosition = function getChunkRelativePosition(position) {
     position = Vector.clone(position);
     position.map((value) => {
         if (value < 0) {
-            return (value % App.DISPLAY.CHUNK_SIZE + App.DISPLAY.CHUNK_SIZE) % App.DISPLAY.CHUNK_SIZE;
+            return (value % APP.MAIN_DISPLAY.CHUNK_SIZE + APP.MAIN_DISPLAY.CHUNK_SIZE) % APP.MAIN_DISPLAY.CHUNK_SIZE;
         }
-        return value % App.DISPLAY.CHUNK_SIZE;
+        return value % APP.MAIN_DISPLAY.CHUNK_SIZE;
     });
     return position;
 };
@@ -65,15 +65,15 @@ Chunk.prototype.setTile = function(position, tile) {
 
 Chunk.prototype.populate = function() {
     let noise_value;
-    for (let y = 0; y < App.NOISE.RESOLUTION.h; y++) {
-        for (let x = 0; x < App.NOISE.RESOLUTION.w; x++) {
+    for (let y = 0; y < APP.NOISE.RESOLUTION.h; y++) {
+        for (let x = 0; x < APP.NOISE.RESOLUTION.w; x++) {
             let position = new Vector(x, y);
             noise_value = Utils.round(
                 Utils.transformValue(
                     Utils.getTile(
-                        this.position.multiply(App.DISPLAY.CHUNK_SIZE)
+                        this.position.multiply(APP.MAIN_DISPLAY.CHUNK_SIZE)
                                      .add(position)
-                                     .multiply(App.NOISE.SCALE)
+                                     .multiply(APP.NOISE.SCALE)
                     ),
                     { min: -1, max: 1 },
                     { min: 0, max: 1 }

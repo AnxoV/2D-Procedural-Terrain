@@ -7,33 +7,33 @@ import {Noise} from "./Noise.js";
 import {DisplayText} from "./DisplayText.js";
 import * as Utils from "./Utils.js";
 
-(function(App) {
+(function(APP) {
     const URL_PARAMS = new URLSearchParams(window.location.search);
 
-    App.DISPLAY = {
+    APP.MAIN_DISPLAY = {
         TILE_SIZE: 30,
         CHUNK_SIZE: 15,
         CHUNKS_RENDER: 1
     };
 
-    App.DISPLAY.RESOLUTION =  {
-        w: App.DISPLAY.TILE_SIZE
-            * App.DISPLAY.CHUNK_SIZE
-            * App.DISPLAY.CHUNKS_RENDER,
-        h: App.DISPLAY.TILE_SIZE
-            * App.DISPLAY.CHUNK_SIZE
-            * App.DISPLAY.CHUNKS_RENDER
+    APP.MAIN_DISPLAY.RESOLUTION =  {
+        w: APP.MAIN_DISPLAY.TILE_SIZE
+            * APP.MAIN_DISPLAY.CHUNK_SIZE
+            * APP.MAIN_DISPLAY.CHUNKS_RENDER,
+        h: APP.MAIN_DISPLAY.TILE_SIZE
+            * APP.MAIN_DISPLAY.CHUNK_SIZE
+            * APP.MAIN_DISPLAY.CHUNKS_RENDER
     };
 
-    App.NOISE = {
+    APP.NOISE = {
         SCALE: 0.1,
         RESOLUTION: {
-            w: App.DISPLAY.RESOLUTION.w / App.DISPLAY.TILE_SIZE,
-            h: App.DISPLAY.RESOLUTION.h / App.DISPLAY.TILE_SIZE
+            w: APP.MAIN_DISPLAY.RESOLUTION.w / APP.MAIN_DISPLAY.TILE_SIZE,
+            h: APP.MAIN_DISPLAY.RESOLUTION.h / APP.MAIN_DISPLAY.TILE_SIZE
         }
     };
 
-    App.MATERIALS = {
+    APP.MATERIALS = {
         "deep-water": "#074575",
         "water": "#1197ff",
         "sand": "#d7b448",
@@ -41,56 +41,56 @@ import * as Utils from "./Utils.js";
         "mountain": "#063800"
     };
 
-    App.CHUNKS = {};
+    APP.CHUNKS = {};
 
     let CACHED_DISPLAY_TEXTS = [];
 
     function keyPress(event) {
         switch(event.key) {
             case "w":
-                App.PLAYER.moveBy(Vector.from(0, -App.PLAYER.velocity));
+                APP.PLAYER.moveBy(Vector.from(0, -APP.PLAYER.velocity));
                 break;
             case "d":
-                App.PLAYER.moveBy(Vector.from(App.PLAYER.velocity, 0));
+                APP.PLAYER.moveBy(Vector.from(APP.PLAYER.velocity, 0));
                 break;
             case "s":
-                App.PLAYER.moveBy(Vector.from(0, App.PLAYER.velocity));
+                APP.PLAYER.moveBy(Vector.from(0, APP.PLAYER.velocity));
                 break;
             case "a":
-                App.PLAYER.moveBy(Vector.from(-App.PLAYER.velocity, 0));
+                APP.PLAYER.moveBy(Vector.from(-APP.PLAYER.velocity, 0));
                 break;
             default:
                 break;
         }
         Utils.writeIntoElements({
-            "#player-position": App.PLAYER.position,
-            "#player-chunk": Chunk.getPosition(App.PLAYER.position),
-            "#player-chunk-position": Chunk.getRelativePosition(App.PLAYER.position)
+            "#player-position": APP.PLAYER.position,
+            "#player-chunk": Chunk.getPosition(APP.PLAYER.position),
+            "#player-chunk-position": Chunk.getRelativePosition(APP.PLAYER.position)
         });
     }
 
     function drawTile(position) {
-        let absolutePosition = App.PLAYER.getPositionFromPlayer(position);
+        let absolutePosition = APP.PLAYER.getPositionFromPlayer(position);
         let chunkPosition = Chunk.getPosition(absolutePosition);
         let chunkRelativePosition = Chunk.getRelativePosition(absolutePosition);
-        let chunk = App.CHUNKS[chunkPosition.toString()] = Chunk.loadChunk(chunkPosition);
+        let chunk = APP.CHUNKS[chunkPosition.toString()] = Chunk.loadChunk(chunkPosition);
         let tile = chunk.getTile(chunkRelativePosition);
 
-        App.DISPLAY.THIS.fillRect(
-            position.multiply(App.DISPLAY.TILE_SIZE),
+        APP.MAIN_DISPLAY.THIS.fillRect(
+            position.multiply(APP.MAIN_DISPLAY.TILE_SIZE),
             {
-                w: App.DISPLAY.TILE_SIZE,
-                h: App.DISPLAY.TILE_SIZE
+                w: APP.MAIN_DISPLAY.TILE_SIZE,
+                h: APP.MAIN_DISPLAY.TILE_SIZE
             },
             tile.color
         );
 
         if (tile.block) {
-            App.DISPLAY.THIS.fillRect(
-                position.multiply(App.DISPLAY.TILE_SIZE),
+            APP.MAIN_DISPLAY.THIS.fillRect(
+                position.multiply(APP.MAIN_DISPLAY.TILE_SIZE),
                 {
-                    w: App.DISPLAY.TILE_SIZE,
-                    h: App.DISPLAY.TILE_SIZE
+                    w: APP.MAIN_DISPLAY.TILE_SIZE,
+                    h: APP.MAIN_DISPLAY.TILE_SIZE
                 },
                 tile.block.material
             );
@@ -99,18 +99,18 @@ import * as Utils from "./Utils.js";
         if (tile.displayText) {
             let cachedDisplayText = {};
             cachedDisplayText.displayText = tile.displayText;
-            cachedDisplayText.width = tile.displayText.getWidth();
+            cachedDisplayText.width = tile.displayText.getWidth(APP.MAIN_DISPLAY.THIS.ctx);
             cachedDisplayText.position = new Vector(
-                position.x*App.DISPLAY.TILE_SIZE+cachedDisplayText.width/16,
-                position.y*App.DISPLAY.TILE_SIZE
+                position.x*APP.MAIN_DISPLAY.TILE_SIZE+cachedDisplayText.width/16,
+                position.y*APP.MAIN_DISPLAY.TILE_SIZE
             );
             CACHED_DISPLAY_TEXTS.push(cachedDisplayText);
         }
     }
 
     function drawTerrain() {
-        for (let y = 0; y < App.NOISE.RESOLUTION.h; y++) {
-            for (let x = 0; x < App.NOISE.RESOLUTION.w; x++) {
+        for (let y = 0; y < APP.NOISE.RESOLUTION.h; y++) {
+            for (let x = 0; x < APP.NOISE.RESOLUTION.w; x++) {
                 drawTile(Vector.from(x, y));
             }
         }
@@ -118,16 +118,16 @@ import * as Utils from "./Utils.js";
 
 
     function drawPlayer() {
-        App.DISPLAY.THIS.fillRect(
+        APP.MAIN_DISPLAY.THIS.fillRect(
             {
-                x: App.DISPLAY.RESOLUTION.w/2 - App.DISPLAY.TILE_SIZE/2,
-                y: App.DISPLAY.RESOLUTION.h/2 - App.DISPLAY.TILE_SIZE/2
+                x: APP.MAIN_DISPLAY.RESOLUTION.w/2 - APP.MAIN_DISPLAY.TILE_SIZE/2,
+                y: APP.MAIN_DISPLAY.RESOLUTION.h/2 - APP.MAIN_DISPLAY.TILE_SIZE/2
             },
             {
-                w: App.DISPLAY.TILE_SIZE,
-                h: App.DISPLAY.TILE_SIZE
+                w: APP.MAIN_DISPLAY.TILE_SIZE,
+                h: APP.MAIN_DISPLAY.TILE_SIZE
             },
-            App.PLAYER.material
+            APP.PLAYER.material
         );
     }
 
@@ -135,7 +135,7 @@ import * as Utils from "./Utils.js";
         CACHED_DISPLAY_TEXTS.forEach(cachedDisplayText => {
             let displayText = cachedDisplayText.displayText;
 
-            App.DISPLAY.THIS.writeMultiLine(
+            APP.MAIN_DISPLAY.THIS.writeMultiLine(
                 cachedDisplayText.position,
                 displayText.text.split("\n"),
                 displayText.color
@@ -147,17 +147,17 @@ import * as Utils from "./Utils.js";
     // =====-===== //
     
     function init() {
-        App.DISPLAY.THIS = new Canvas(Utils.$("#canvas"), App.DISPLAY.RESOLUTION);
+        APP.MAIN_DISPLAY.THIS = new Canvas(Utils.$("#canvas"), APP.MAIN_DISPLAY.RESOLUTION);
 
-        App.NOISE.THIS = new Noise();
-        App.NOISE.THIS.setSeed(Utils.hash(URL_PARAMS.get("seed") || "1337"));
+        APP.NOISE.THIS = new Noise();
+        APP.NOISE.THIS.setSeed(Utils.hash(URL_PARAMS.get("seed") || "1337"));
 
-        App.PLAYER = new Player("red");
+        APP.PLAYER = new Player("red");
 
         Utils.writeIntoElements({
-            "#player-position": App.PLAYER.position,
-            "#player-chunk": Chunk.getPosition(App.PLAYER.position),
-            "#player-chunk-position": Chunk.getRelativePosition(App.PLAYER.position)
+            "#player-position": APP.PLAYER.position,
+            "#player-chunk": Chunk.getPosition(APP.PLAYER.position),
+            "#player-chunk-position": Chunk.getRelativePosition(APP.PLAYER.position)
         });
         addEventListener("keydown", keyPress);
     }
@@ -186,7 +186,7 @@ import * as Utils from "./Utils.js";
 
     
     function update() {
-        App.DISPLAY.THIS.clear();
+        APP.MAIN_DISPLAY.THIS.clear();
         drawTerrain();
         drawPlayer();
         drawCachedDisplayTexts();
@@ -199,4 +199,4 @@ import * as Utils from "./Utils.js";
     setInterval(update, 100);
     //Canvas.animation(update);
     
-})(window.App = window.App || {});
+})(window.APP = window.APP || {});

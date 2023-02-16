@@ -20,8 +20,8 @@ export class Player extends Entity {
     constructor(material) {
         super(
             Vector.from(
-                Math.floor(App.DISPLAY.CHUNK_SIZE/2),
-                Math.floor(App.DISPLAY.CHUNK_SIZE/2)
+                Math.floor(APP.MAIN_DISPLAY.CHUNK_SIZE/2),
+                Math.floor(APP.MAIN_DISPLAY.CHUNK_SIZE/2)
             ),
             material,
             { w: 1, h: 1 }
@@ -35,7 +35,7 @@ Player.prototype.moveTo = function(newPosition) {
     let chunkPosition = Chunk.getPosition(newPosition);
     let chunkRelativePosition = Chunk.getRelativePosition(newPosition);
     
-    let chunk = App.CHUNKS[chunkPosition.toString()] = Chunk.loadChunk(chunkPosition);
+    let chunk = APP.CHUNKS[chunkPosition.toString()] = Chunk.loadChunk(chunkPosition);
     let tile = chunk.getTile(chunkRelativePosition);
 
     if (tile.block && !tile.block.walkable) {
@@ -50,7 +50,7 @@ Player.prototype.moveBy = function(force) {
 
 Player.prototype.getPositionFromPlayer = function(position) {
     return this.position.substract(Vector.from(
-        Math.floor(App.DISPLAY.CHUNK_SIZE/2),
-        Math.floor(App.DISPLAY.CHUNK_SIZE/2)
+        Math.floor(APP.MAIN_DISPLAY.CHUNK_SIZE/2),
+        Math.floor(APP.MAIN_DISPLAY.CHUNK_SIZE/2)
     )).add(position);
 }

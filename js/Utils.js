@@ -3,15 +3,15 @@ export function $(query) {
 }
 
 export function getColor(value) {
-    if (value < 0.3) return App.MATERIALS["deep-water"];
-    else if (value < 0.4) return App.MATERIALS["water"];
-    else if (value < 0.5) return App.MATERIALS["sand"];
-    else if (value < 0.8) return App.MATERIALS["grass"];
-    else if (value < 1) return App.MATERIALS["mountain"];
+    if (value < 0.3) return APP.MATERIALS["deep-water"];
+    else if (value < 0.4) return APP.MATERIALS["water"];
+    else if (value < 0.5) return APP.MATERIALS["sand"];
+    else if (value < 0.8) return APP.MATERIALS["grass"];
+    else if (value < 1) return APP.MATERIALS["mountain"];
 }
 
 export function getTile(position) {
-    return App.NOISE.THIS.perlin2D(position.x, position.y);
+    return APP.NOISE.THIS.perlin2D(position.x, position.y);
 }
 
 
