@@ -5,6 +5,6 @@ export class DisplayText {
     }
 }
 
-DisplayText.prototype.getSize = function() {
-    return App.DISPLAY.THIS.ctx.measureText(this.text);
+DisplayText.prototype.getWidth = function() {
+    return App.DISPLAY.THIS.ctx.measureText(this.text).width;
 }

@@ -11,7 +11,7 @@ import * as Utils from "./Utils.js";
     const URL_PARAMS = new URLSearchParams(window.location.search);
 
     App.DISPLAY = {
-        TILE_SIZE: 15,
+        TILE_SIZE: 30,
         CHUNK_SIZE: 15,
         CHUNKS_RENDER: 1
     };
@@ -43,6 +43,8 @@ import * as Utils from "./Utils.js";
 
     App.CHUNKS = {};
 
+    let CACHED_DISPLAY_TEXTS = [];
+
     function keyPress(event) {
         switch(event.key) {
             case "w":
@@ -71,10 +73,8 @@ import * as Utils from "./Utils.js";
         let absolutePosition = App.PLAYER.getPositionFromPlayer(position);
         let chunkPosition = Chunk.getPosition(absolutePosition);
         let chunkRelativePosition = Chunk.getRelativePosition(absolutePosition);
-
-
-        let chunk = App.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
-        let tile = chunk.tiles[`${chunkRelativePosition}`];
+        let chunk = App.CHUNKS[chunkPosition.toString()] = Chunk.loadChunk(chunkPosition);
+        let tile = chunk.getTile(chunkRelativePosition);
 
         App.DISPLAY.THIS.fillRect(
             position.multiply(App.DISPLAY.TILE_SIZE),
@@ -97,13 +97,14 @@ import * as Utils from "./Utils.js";
         }
 
         if (tile.displayText) {
-            let textSize = tile.displayText.getSize();
-            App.DISPLAY.THIS.ctx.fillStyle = "gray";
-            App.DISPLAY.THIS.ctx.fillText(
-                tile.displayText.text,
-                position.x*App.DISPLAY.TILE_SIZE-(textSize.width%App.DISPLAY.TILE_SIZE) / 2,
-                position.y*App.DISPLAY.TILE_SIZE-App.DISPLAY.TILE_SIZE*0.5
+            let cachedDisplayText = {};
+            cachedDisplayText.displayText = tile.displayText;
+            cachedDisplayText.width = tile.displayText.getWidth();
+            cachedDisplayText.position = new Vector(
+                position.x*App.DISPLAY.TILE_SIZE+cachedDisplayText.width/16,
+                position.y*App.DISPLAY.TILE_SIZE
             );
+            CACHED_DISPLAY_TEXTS.push(cachedDisplayText);
         }
     }
 
@@ -130,6 +131,19 @@ import * as Utils from "./Utils.js";
         );
     }
 
+    function drawCachedDisplayTexts() {
+        CACHED_DISPLAY_TEXTS.forEach(cachedDisplayText => {
+            let displayText = cachedDisplayText.displayText;
+
+            App.DISPLAY.THIS.writeMultiLine(
+                cachedDisplayText.position,
+                displayText.text.split("\n"),
+                displayText.color
+            );
+        });
+        CACHED_DISPLAY_TEXTS = [];
+    }
+
     // =====-===== //
     
     function init() {
@@ -140,15 +154,6 @@ import * as Utils from "./Utils.js";
 
         App.PLAYER = new Player("red");
 
-        App.CHUNKS["0 0"].tiles["7 14"].block = new Block(
-            {
-                position: Vector.from(7, 14),
-                material: "purple",
-                walkable: false
-            }
-        );
-        App.CHUNKS["0 0"].tiles["7 14"].displayText = new DisplayText("UwU", "pink");
-
         Utils.writeIntoElements({
             "#player-position": App.PLAYER.position,
             "#player-chunk": Chunk.getPosition(App.PLAYER.position),
@@ -157,16 +162,40 @@ import * as Utils from "./Utils.js";
         addEventListener("keydown", keyPress);
     }
 
+    function testInit() {
+        let tile = Chunk.loadChunk(Vector.from(0, 0)).getTile(Vector.from(4, 3));
+        tile.setProperties({
+            "block": new Block({
+                material: "purple",
+                walkable: false
+            }),
+            "displayText": new DisplayText("No puedes pasar este bloque UwU", "pink")
+        });
+
+        let tile2 = Chunk.loadChunk(Vector.from(0, 0)).getTile(Vector.from(12, 3));
+        tile2.setProperties({
+            "block": new Block({
+                material: "purple",
+                walkable: false
+            }),
+            "displayText": new DisplayText("No puedes\npasar este\nbloque UwU", "pink")
+        });
+
+
+    }
+
     
     function update() {
         App.DISPLAY.THIS.clear();
         drawTerrain();
         drawPlayer();
+        drawCachedDisplayTexts();
     }
     
     // =====-===== //
     
     init();
+    testInit();
     setInterval(update, 100);
     //Canvas.animation(update);
     

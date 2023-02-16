@@ -1,5 +1,3 @@
-import {Chunk} from "./Structure.js";
-
 export function $(query) {
     return document.querySelector(query);
 }

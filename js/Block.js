@@ -1,5 +1,5 @@
 export class Block {
-    constructor(attributes) {
-        Object.assign(this, attributes);
+    constructor(data) {
+        Object.assign(this, data);
     }
 };

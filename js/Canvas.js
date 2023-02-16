@@ -1,3 +1,5 @@
+import {Vector} from "./Vector.js";
+
 export class Canvas {
     constructor(canvas, size) {
         this.canvas = canvas;
@@ -24,6 +26,28 @@ Canvas.prototype.fillRect = function(position, size, color) {
         size.w,
         size.h
     );
+};
+
+Canvas.prototype.writeLine = function(position, text, color, size=16) {
+    this.ctx.fillStyle = color;
+    this.ctx.textAlign = "center";
+    this.ctx.font = `${size}px Arial`;
+    this.ctx.fillText(
+        text,
+        Math.floor(position.x),
+        Math.floor(position.y)
+    );
+};
+
+Canvas.prototype.writeMultiLine = function(position, lines, color, size=16, lineHeight=16) {
+    for (let i = 0; i < lines.length; i++) {
+        this.writeLine(
+            position.substract(Vector.from(0, lineHeight*lines.length)).add(Vector.from(0, i*lineHeight)),
+            lines[i],
+            color,
+            size
+        );
+    }
 }
 
 Canvas.animation = function(animate) {
