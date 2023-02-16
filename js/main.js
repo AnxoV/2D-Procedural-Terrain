@@ -4,6 +4,7 @@ import {Chunk} from "./Structure.js";
 import {Player} from "./Entity.js";
 import {Block} from "./Block.js";
 import {Noise} from "./Noise.js";
+import {DisplayText} from "./DisplayText.js";
 import * as Utils from "./Utils.js";
 
 (function(App) {
@@ -94,6 +95,16 @@ import * as Utils from "./Utils.js";
                 tile.block.material
             );
         }
+
+        if (tile.displayText) {
+            let textSize = tile.displayText.getSize();
+            App.DISPLAY.THIS.ctx.fillStyle = "gray";
+            App.DISPLAY.THIS.ctx.fillText(
+                tile.displayText.text,
+                position.x*App.DISPLAY.TILE_SIZE-(textSize.width%App.DISPLAY.TILE_SIZE) / 2,
+                position.y*App.DISPLAY.TILE_SIZE-App.DISPLAY.TILE_SIZE*0.5
+            );
+        }
     }
 
     function drawTerrain() {
@@ -136,6 +147,7 @@ import * as Utils from "./Utils.js";
                 walkable: false
             }
         );
+        App.CHUNKS["0 0"].tiles["7 14"].displayText = new DisplayText("UwU", "pink");
 
         Utils.writeIntoElements({
             "#player-position": App.PLAYER.position,
