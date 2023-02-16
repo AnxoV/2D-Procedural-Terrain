@@ -102,7 +102,7 @@ import * as Utils from "./Utils.js";
             cachedDisplayText.width = tile.displayText.getWidth(APP.MAIN_DISPLAY.THIS.ctx);
             cachedDisplayText.position = new Vector(
                 position.x*APP.MAIN_DISPLAY.TILE_SIZE+cachedDisplayText.width/16,
-                position.y*APP.MAIN_DISPLAY.TILE_SIZE
+                position.y*APP.MAIN_DISPLAY.TILE_SIZE-APP.MAIN_DISPLAY.TILE_SIZE*0.2
             );
             CACHED_DISPLAY_TEXTS.push(cachedDisplayText);
         }
@@ -134,10 +134,25 @@ import * as Utils from "./Utils.js";
     function drawCachedDisplayTexts() {
         CACHED_DISPLAY_TEXTS.forEach(cachedDisplayText => {
             let displayText = cachedDisplayText.displayText;
+            let padding = Vector.from(16, 16);
+
+
+            APP.MAIN_DISPLAY.THIS.fillRect(
+                cachedDisplayText.position
+                                 .substract(Vector.from(
+                                    cachedDisplayText.width/2 + padding.x,
+                                    displayText.text.length*16 + padding.y*2
+                                 )),
+                {
+                    w: cachedDisplayText.width + padding.x*2,
+                    h: displayText.text.length*16 + padding.y*2
+                },
+                "white"
+            );
 
             APP.MAIN_DISPLAY.THIS.writeMultiLine(
                 cachedDisplayText.position,
-                displayText.text.split("\n"),
+                displayText.text,
                 displayText.color
             );
         });
@@ -169,7 +184,7 @@ import * as Utils from "./Utils.js";
                 material: "purple",
                 walkable: false
             }),
-            "displayText": new DisplayText("No puedes pasar este bloque UwU", "pink")
+            "displayText": new DisplayText("No puedes pasar este bloque UwU", "black")
         });
 
         let tile2 = Chunk.loadChunk(Vector.from(0, 0)).getTile(Vector.from(12, 3));
@@ -178,7 +193,7 @@ import * as Utils from "./Utils.js";
                 material: "purple",
                 walkable: false
             }),
-            "displayText": new DisplayText("No puedes\npasar este\nbloque UwU", "pink")
+            "displayText": new DisplayText("No puedes\npasar este\nbloque UwU", "black")
         });
 
 
