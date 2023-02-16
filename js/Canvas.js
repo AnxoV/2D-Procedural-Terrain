@@ -1,4 +1,4 @@
-export class CanvasDisplay2D {
+export class Canvas {
     constructor(canvas, size) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
@@ -6,17 +6,17 @@ export class CanvasDisplay2D {
     }
 }
 
-CanvasDisplay2D.prototype.resize = function(size) {
+Canvas.prototype.resize = function(size) {
     this.canvas.width = size.w;
     this.canvas.height = size.h;
 };
 
-CanvasDisplay2D.prototype.clear = function() {
+Canvas.prototype.clear = function() {
     this.ctx.fillStyle = "white";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 };
 
-CanvasDisplay2D.prototype.fillRect = function(position, size, color) {
+Canvas.prototype.fillRect = function(position, size, color) {
     this.ctx.fillStyle = color;
     this.ctx.fillRect(
         position.x,
@@ -26,7 +26,7 @@ CanvasDisplay2D.prototype.fillRect = function(position, size, color) {
     );
 }
 
-CanvasDisplay2D.animation = function(animate) {
+Canvas.animation = function(animate) {
     let then, deltaTime;
 
     function frame(now) {

@@ -1,5 +1,5 @@
 import {Vector} from "./Vector.js";
-import {CanvasDisplay2D} from "./CanvasDisplay2D.js";
+import {Canvas} from "./Canvas.js";
 import {Chunk} from "./Structure.js";
 import {Player} from "./Entity.js";
 import {Block} from "./Block.js";
@@ -67,10 +67,13 @@ import * as Utils from "./Utils.js";
     }
 
     function drawTile(position) {
-        let positions = Chunk.getPositions(position);
+        let absolutePosition = App.PLAYER.getPositionFromPlayer(position);
+        let chunkPosition = Chunk.getPosition(absolutePosition);
+        let chunkRelativePosition = Chunk.getRelativePosition(absolutePosition);
 
-        let chunk = App.CHUNKS[`${positions.chunk}`] = Chunk.loadChunk(positions.chunk);
-        let tile = chunk.tiles[`${positions.chunkRelative}`];
+
+        let chunk = App.CHUNKS[`${chunkPosition}`] = Chunk.loadChunk(chunkPosition);
+        let tile = chunk.tiles[`${chunkRelativePosition}`];
 
         App.DISPLAY.THIS.fillRect(
             position.multiply(App.DISPLAY.TILE_SIZE),
@@ -119,17 +122,21 @@ import * as Utils from "./Utils.js";
     // =====-===== //
     
     function init() {
-        App.DISPLAY.THIS = new CanvasDisplay2D(Utils.$("#canvas"), App.DISPLAY.RESOLUTION);
+        App.DISPLAY.THIS = new Canvas(Utils.$("#canvas"), App.DISPLAY.RESOLUTION);
+
         App.NOISE.THIS = new Noise();
         App.NOISE.THIS.setSeed(Utils.hash(URL_PARAMS.get("seed") || "1337"));
+
         App.PLAYER = new Player("red");
-        Chunk.loadChunks(Chunk.getPosition(App.PLAYER.position));
-        Chunk.loadChunk(Vector.from(0, -1));
-        App.CHUNKS["0 -1"].tiles["0 7"].block = new Block({
-            position: Vector.from(0, -1),
-            material: "purple",
-            walkable: false
-        });
+
+        App.CHUNKS["0 0"].tiles["7 14"].block = new Block(
+            {
+                position: Vector.from(7, 14),
+                material: "purple",
+                walkable: false
+            }
+        );
+
         Utils.writeIntoElements({
             "#player-position": App.PLAYER.position,
             "#player-chunk": Chunk.getPosition(App.PLAYER.position),
@@ -149,6 +156,6 @@ import * as Utils from "./Utils.js";
     
     init();
     setInterval(update, 100);
-    //CanvasDisplay2D.animation(update);
+    //Canvas.animation(update);
     
 })(window.App = window.App || {});
