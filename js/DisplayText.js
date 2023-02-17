@@ -7,7 +7,8 @@ export class DisplayText {
             {
                 fillStyle: "black",
                 font : "16px Arial",
-                lineHeight: "16px"
+                lineHeight: "16px",
+                textBaseLine: "top"
             },
             config
         );

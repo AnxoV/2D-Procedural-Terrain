@@ -54,12 +54,13 @@ Canvas.prototype.writeMultiLine = function(position, lines, config) {
         lineHeight: "16px"
     }, config);
 
+
     lines.forEach((line, index) => {
         this.writeLine(
             position.substract(
-                Vector.from(0, config.lineHeight*lines.length)
+                Vector.from(0, parseInt(config.lineHeight)*lines.length)
             ).add(
-                Vector.from(0, index*config.lineHeight)
+                Vector.from(0, parseInt(config.lineHeight)*index)
             ),
             line,
             config
