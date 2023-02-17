@@ -36,7 +36,14 @@ Chunk.loadChunks = function(position) {
     }
 };
 
-Chunk.getPosition = function getChunkPosition(position) {
+Chunk.getPositions = function(position) {
+    return {
+        chunk: Chunk.getPosition(position),
+        relative: Chunk.getRelativePosition(position)
+    }
+};
+
+Chunk.getPosition = function(position) {
     position = Vector.clone(position);
     position.map((value) => {
         return Math.floor(value / APP.MAIN_DISPLAY.CHUNK_SIZE);
@@ -44,7 +51,7 @@ Chunk.getPosition = function getChunkPosition(position) {
     return position;
 };
 
-Chunk.getRelativePosition = function getChunkRelativePosition(position) {
+Chunk.getRelativePosition = function(position) {
     position = Vector.clone(position);
     position.map((value) => {
         if (value < 0) {

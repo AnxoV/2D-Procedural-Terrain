@@ -53,4 +53,20 @@ Player.prototype.getPositionFromPlayer = function(position) {
         Math.floor(APP.MAIN_DISPLAY.CHUNK_SIZE/2),
         Math.floor(APP.MAIN_DISPLAY.CHUNK_SIZE/2)
     )).add(position);
+};
+
+Player.prototype.getTileFromPlayer = function(force) {
+    let positions = {
+        absolute: this.position.add(force)
+    };
+    Object.assign(positions, Chunk.getPositions(positions.absolute));
+    console.log("Fuerza:", force);
+    console.log("Posición:",this.position);
+    console.log("Resultado a mano:", this.position.add(force));
+    console.log("Posición función:", positions.absolute);
+    console.log("Posición chunk:", Chunk.getChunk(positions.chunk));
+    console.log("Tile:", Chunk.getChunk(positions.chunk).getTile(positions.relative));
+
+    return Chunk.getChunk(positions.chunk).getTile(positions.relative);
+
 }

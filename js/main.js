@@ -15,7 +15,6 @@ import * as Utils from "./Utils.js";
         CHUNK_SIZE: 15,
         CHUNKS_RENDER: 1
     };
-
     APP.MAIN_DISPLAY.RESOLUTION =  {
         w: APP.MAIN_DISPLAY.TILE_SIZE
             * APP.MAIN_DISPLAY.CHUNK_SIZE
@@ -24,7 +23,6 @@ import * as Utils from "./Utils.js";
             * APP.MAIN_DISPLAY.CHUNK_SIZE
             * APP.MAIN_DISPLAY.CHUNKS_RENDER
     };
-
     APP.NOISE = {
         SCALE: 0.1,
         RESOLUTION: {
@@ -32,7 +30,6 @@ import * as Utils from "./Utils.js";
             h: APP.MAIN_DISPLAY.RESOLUTION.h / APP.MAIN_DISPLAY.TILE_SIZE
         }
     };
-
     APP.MATERIALS = {
         "deep-water": "#074575",
         "water": "#1197ff",
@@ -40,28 +37,27 @@ import * as Utils from "./Utils.js";
         "grass": "#11aa00",
         "mountain": "#063800"
     };
-
     APP.CHUNKS = {};
 
-    let CACHED_DISPLAY_TEXTS = [];
-
     function keyPress(event) {
-        switch(event.key) {
-            case "w":
-                APP.PLAYER.moveBy(Vector.from(0, -APP.PLAYER.velocity));
-                break;
-            case "d":
-                APP.PLAYER.moveBy(Vector.from(APP.PLAYER.velocity, 0));
-                break;
-            case "s":
-                APP.PLAYER.moveBy(Vector.from(0, APP.PLAYER.velocity));
-                break;
-            case "a":
-                APP.PLAYER.moveBy(Vector.from(-APP.PLAYER.velocity, 0));
-                break;
-            default:
-                break;
+        if (APP.MAIN_DISPLAY.KEYBOARD.HISTORY) {
+            let history = APP.MAIN_DISPLAY.KEYBOARD.HISTORY
+            delete APP.MAIN_DISPLAY.KEYBOARD.HISTORY;
+            APP.MAIN_DISPLAY.KEYBOARD.KEYS[history][event.key]();
+        } else {
+            switch (typeof APP.MAIN_DISPLAY.KEYBOARD.KEYS[event.key]) {
+                case "function":
+                    APP.MAIN_DISPLAY.KEYBOARD.KEYS[event.key]();
+                    break;
+                case "object":
+                    APP.MAIN_DISPLAY.KEYBOARD.HISTORY = event.key;
+                    break;
+                default:
+                    break;
+            }
         }
+        
+
         Utils.writeIntoElements({
             "#player-position": APP.PLAYER.position,
             "#player-chunk": Chunk.getPosition(APP.PLAYER.position),
@@ -70,11 +66,13 @@ import * as Utils from "./Utils.js";
     }
 
     function drawTile(position) {
-        let absolutePosition = APP.PLAYER.getPositionFromPlayer(position);
-        let chunkPosition = Chunk.getPosition(absolutePosition);
-        let chunkRelativePosition = Chunk.getRelativePosition(absolutePosition);
-        let chunk = APP.CHUNKS[chunkPosition.toString()] = Chunk.loadChunk(chunkPosition);
-        let tile = chunk.getTile(chunkRelativePosition);
+        let positions = {
+            absolute: APP.PLAYER.getPositionFromPlayer(position)
+        };
+        Object.assign(positions, Chunk.getPositions(positions.absolute));
+
+        let chunk = APP.CHUNKS[positions.chunk.toString()] = Chunk.loadChunk(positions.chunk);
+        let tile = chunk.getTile(positions.relative);
 
         APP.MAIN_DISPLAY.THIS.fillRect(
             position.multiply(APP.MAIN_DISPLAY.TILE_SIZE),
@@ -97,14 +95,17 @@ import * as Utils from "./Utils.js";
         }
 
         if (tile.displayText) {
-            let cachedDisplayText = {};
-            cachedDisplayText.displayText = tile.displayText;
-            cachedDisplayText.width = tile.displayText.getWidth(APP.MAIN_DISPLAY.THIS.ctx);
-            cachedDisplayText.position = new Vector(
-                position.x*APP.MAIN_DISPLAY.TILE_SIZE+cachedDisplayText.width/16,
-                position.y*APP.MAIN_DISPLAY.TILE_SIZE-APP.MAIN_DISPLAY.TILE_SIZE*0.2
-            );
-            CACHED_DISPLAY_TEXTS.push(cachedDisplayText);
+            DisplayText.cached.push({
+                this: tile.displayText,
+                tile: tile,
+                position: position.multiply(APP.MAIN_DISPLAY.TILE_SIZE)
+                                    .substract(
+                                        Vector.from(
+                                            tile.displayText.getWidth(APP.MAIN_DISPLAY.THIS.ctx)/2,
+                                            tile.displayText.text.length*parseInt(tile.displayText.lineHeight)+1.5*APP.MAIN_DISPLAY.TILE_SIZE
+                                        )
+                                    )
+            });
         }
     }
 
@@ -132,31 +133,27 @@ import * as Utils from "./Utils.js";
     }
 
     function drawCachedDisplayTexts() {
-        CACHED_DISPLAY_TEXTS.forEach(cachedDisplayText => {
-            let displayText = cachedDisplayText.displayText;
-            let padding = Vector.from(16, 16);
+        DisplayText.cached.forEach(displayText => {
+            if (displayText.this.shown) {
+                let padding = displayText.this.padding || Vector.from(0, 0);
 
+                APP.MAIN_DISPLAY.THIS.fillRect(
+                    displayText.position,
+                    {
+                        w: displayText.this.getWidth(APP.MAIN_DISPLAY.THIS.ctx) + padding.x*2,
+                        h: displayText.this.text.length*parseInt(displayText.this.lineHeight) + padding.y*2
+                    },
+                    "rgba(255, 255, 255, .5)"
+                );
 
-            APP.MAIN_DISPLAY.THIS.fillRect(
-                cachedDisplayText.position
-                                 .substract(Vector.from(
-                                    cachedDisplayText.width/2 + padding.x,
-                                    displayText.text.length*16 + padding.y*2
-                                 )),
-                {
-                    w: cachedDisplayText.width + padding.x*2,
-                    h: displayText.text.length*16 + padding.y*2
-                },
-                "white"
-            );
-
-            APP.MAIN_DISPLAY.THIS.writeMultiLine(
-                cachedDisplayText.position,
-                displayText.text,
-                displayText.color
-            );
+                APP.MAIN_DISPLAY.THIS.writeMultiLine(
+                    displayText.position,
+                    displayText.this.text
+                );
+                
+            }
         });
-        CACHED_DISPLAY_TEXTS = [];
+        DisplayText.cached = [];
     }
 
     // =====-===== //
@@ -168,6 +165,22 @@ import * as Utils from "./Utils.js";
         APP.NOISE.THIS.setSeed(Utils.hash(URL_PARAMS.get("seed") || "1337"));
 
         APP.PLAYER = new Player("red");
+
+        APP.MAIN_DISPLAY.KEYBOARD = {
+            KEYS: {
+                "w": function() { APP.PLAYER.moveBy(Vector.from(0, -APP.PLAYER.velocity)) },
+                "d": function() { APP.PLAYER.moveBy(Vector.from(APP.PLAYER.velocity, 0)) },
+                "s": function() { APP.PLAYER.moveBy(Vector.from(0, APP.PLAYER.velocity)) },
+                "a": function() { APP.PLAYER.moveBy(Vector.from(-APP.PLAYER.velocity, 0)) },
+                "i": {
+                    "w": function() {
+                        APP.PLAYER.getTileFromPlayer(Vector.from(0, -1)).displayText.shown = true; },
+                    "d": function() { console.log("Info derecha"); },
+                    "s": function() { console.log("Info abajo"); },
+                    "a": function() { console.log("Info izquierda"); }
+                }
+            }
+        };
 
         Utils.writeIntoElements({
             "#player-position": APP.PLAYER.position,
@@ -184,7 +197,12 @@ import * as Utils from "./Utils.js";
                 material: "purple",
                 walkable: false
             }),
-            "displayText": new DisplayText("No puedes pasar este bloque UwU", "black")
+            "displayText": new DisplayText(
+                "No puedes pasar este bloque UwU",
+                {
+                    padding: Vector.from(16, 16)
+                }
+            )
         });
 
         let tile2 = Chunk.loadChunk(Vector.from(0, 0)).getTile(Vector.from(12, 3));
@@ -193,7 +211,12 @@ import * as Utils from "./Utils.js";
                 material: "purple",
                 walkable: false
             }),
-            "displayText": new DisplayText("No puedes\npasar este\nbloque UwU", "black")
+            "displayText": new DisplayText(
+                "No puedes\npasar este\nbloque UwU",
+                {
+                    padding: Vector.from(16, 16)
+                }
+            )
         });
 
 

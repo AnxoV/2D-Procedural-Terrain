@@ -28,26 +28,43 @@ Canvas.prototype.fillRect = function(position, size, color) {
     );
 };
 
-Canvas.prototype.writeLine = function(position, text, color, size=16) {
-    this.ctx.fillStyle = color;
-    this.ctx.textAlign = "center";
-    this.ctx.font = `${size}px Arial`;
+Canvas.prototype.writeLine = function(position, line, config) {
+    config = Object.assign({
+        fillStyle: "black",
+        font: "16px Arial",
+        textBaseline: "top"
+    }, config);
+
+    Object.keys(config).forEach((property) => {
+        this.ctx[property] = config[property];
+    });
+
     this.ctx.fillText(
-        text,
+        line,
         Math.floor(position.x),
         Math.floor(position.y)
     );
 };
 
-Canvas.prototype.writeMultiLine = function(position, lines, color, size=16, lineHeight=16) {
-    for (let i = 0; i < lines.length; i++) {
+Canvas.prototype.writeMultiLine = function(position, lines, config) {
+    config = Object.assign({
+        fillStyle: "black",
+        font: "16px Arial",
+        textBaseline: "top",
+        lineHeight: "16px"
+    }, config);
+
+    lines.forEach((line, index) => {
         this.writeLine(
-            position.substract(Vector.from(0, lineHeight*lines.length)).add(Vector.from(0, i*lineHeight)),
-            lines[i],
-            color,
-            size
+            position.substract(
+                Vector.from(0, config.lineHeight*lines.length)
+            ).add(
+                Vector.from(0, index*config.lineHeight)
+            ),
+            line,
+            config
         );
-    }
+    });
 }
 
 Canvas.animation = function(animate) {

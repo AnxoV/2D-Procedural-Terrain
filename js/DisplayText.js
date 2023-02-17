@@ -1,9 +1,19 @@
 export class DisplayText {
-    constructor(text, color) {
+    constructor(text, config) {
         this.text = text.split("\n");
-        this.color = color;
+        this.shown = true;
+
+        Object.assign(this,
+            {
+                fillStyle: "black",
+                font : "16px Arial",
+                lineHeight: "16px"
+            },
+            config
+        );
     }
 }
+DisplayText.cached = [];
 
 DisplayText.prototype.getWidth = function(ctx) {
     let maxWidth = 0;
